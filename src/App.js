@@ -1,23 +1,84 @@
-import logo from './logo.svg';
-import './App.css';
-
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+import { GuestList } from "./Components/GuestList/GuestList";
+import { ButtonStyled, FormStyled, InputStyled } from "./app.style";
 function App() {
+  const [formData, setFormData] = useState({
+    name: "",
+    mail: "",
+    age: "",
+  });
+
+  const [guestList, setGuestList] = useState([]);
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData({
+      ...formData,
+      [name]: value,
+    });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    try {
+      const response = await axios.post("/", formData);
+      const newGuest = response.data;
+      alert(`Guest ${newGuest.name} added successfully`);
+      setGuestList([...guestList, newGuest]); // Update the guest list state with the new guest
+      setFormData({
+        name: "",
+        mail: "",
+        age: "",
+      });
+    } catch (error) {
+      console.error("Error adding guest:", error);
+      alert("Failed to add guest. Please try again.");
+    }
+  };
+
+  useEffect(() => {
+    // Fetch the initial guest list when the component mounts
+    const fetchGuestList = async () => {
+      try {
+        const response = await axios.get("http://localhost:3000/"); // Replace with your server URL
+        setGuestList(response.data);
+      } catch (error) {
+        console.error("Error fetching guest list:", error);
+      }
+    };
+
+    fetchGuestList();
+  }, []);
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div>
+      <FormStyled onSubmit={handleSubmit}>
+        <InputStyled
+          type="text"
+          name="name"
+          placeholder="Name"
+          value={formData.name}
+          onChange={handleChange}
+        />
+        <InputStyled
+          type="text"
+          name="mail"
+          placeholder="Mail"
+          value={formData.mail}
+          onChange={handleChange}
+        />
+        <InputStyled
+          type="text"
+          name="age"
+          placeholder="Age"
+          value={formData.age}
+          onChange={handleChange}
+        />
+        <ButtonStyled type="submit">Add Guest</ButtonStyled>
+      </FormStyled>
+      <GuestList />
     </div>
   );
 }
